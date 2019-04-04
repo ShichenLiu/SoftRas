@@ -41,7 +41,7 @@ SoftRas provides strong supervision for image-based mesh deformation. We visuali
 
 With scheduled blurry renderings, one can obtain smooth energy landscape that avoids local minima. 
 Below we demonstrate how a color cube is fitted to the target image in the presence of large occlusions.
-The blurry rendering and the corresponding rendering losses are shown in the 3nd and 4th columns respectively.
+The blurry rendering and the corresponding rendering losses are shown in the 3rd and 4th columns respectively.
 
 ![](https://raw.githubusercontent.com/ShichenLiu/SoftRas/master/data/media/demo/fitting/cubic.gif)
 
