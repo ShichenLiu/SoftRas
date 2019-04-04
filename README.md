@@ -37,7 +37,7 @@ SoftRas provides strong supervision for image-based mesh deformation. We visuali
 
 ![](https://raw.githubusercontent.com/ShichenLiu/SoftRas/master/data/media/demo/deform/sphere_to_car.gif) ![](https://raw.githubusercontent.com/ShichenLiu/SoftRas/master/data/media/demo/deform/car_to_plane.gif)
 
-### 3. Rigid Pose Optimization
+### 3. Pose Optimization for Rigid Objects
 
 With scheduled blurry renderings, one can obtain smooth energy landscape that avoids local minima. 
 Below we demonstrate how a color cube is fitted to the target image in the presence of large occlusions.
