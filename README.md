@@ -1,11 +1,11 @@
 # Soft Rasterizer (SoftRas)
 
-This repository contains the code (in PyTorch, coming soon) for "[Soft Rasterizer: A Differentiable Renderer for Image-based 3D Reasoning](https://arxiv.org/abs/1904.01786)" paper by [Shichen Liu](https://shichenliu.github.io), [Tianye Li](https://sites.google.com/site/tianyefocus/home), [Weikai Chen](http://chenweikai.github.io/) and [Hao Li](https://www.hao-li.com/Hao_Li/Hao_Li_-_about_me.html).
+This repository contains the code (in PyTorch) for "[Soft Rasterizer: A Differentiable Renderer for Image-based 3D Reasoning](https://arxiv.org/abs/1904.01786)" paper by [Shichen Liu](https://shichenliu.github.io), [Tianye Li](https://sites.google.com/site/tianyefocus/home), [Weikai Chen](http://chenweikai.github.io/) and [Hao Li](https://www.hao-li.com/Hao_Li/Hao_Li_-_about_me.html).
 
 ## Contents
 
 1. [Introduction](#introduction)
-2. [Rendering](#rendering)
+2. [Usage](#usage)
 3. [Applications](#applications)
 4. [Contacts](#contacts)
 
@@ -15,15 +15,32 @@ Soft Rasterizer (SoftRas) is a truly differentiable renderer framework with a no
 
 <img src="https://raw.githubusercontent.com/ShichenLiu/SoftRas/master/data/media/teaser/teaser.png" width="60%">
 
-As a universal module, SoftRas can be plugged into any optimization framework related to image-based 3D reasoning. There are three properties that make SoftRas particularly suitable for mesh-based 3D optimization: (1) SoftRas is **occlusion-aware**, meaning it is able to flow gradients to the occluded vertices in the input view; (2) SoftRas is able to optimize the **depth/z-coordinate** of the vertices, moving the vertices along the axis perpenticular to the image plane; (3) by using SoftRas, pixels can have **far-range impact** on distant mesh triangles, in which the size of the receptive field can be tuned by `sigma`.   
+<!-- As a universal module, SoftRas can be plugged into any optimization framework related to image-based 3D reasoning. There are three properties that make SoftRas particularly suitable for mesh-based 3D optimization: (1) SoftRas is **occlusion-aware**, meaning it is able to flow gradients to the occluded vertices in the input view; (2) SoftRas is able to optimize the **depth/z-coordinate** of the vertices, moving the vertices along the axis perpenticular to the image plane; (3) by using SoftRas, pixels can have **far-range impact** on distant mesh triangles, in which the size of the receptive field can be tuned by `sigma`.    -->
 
-## Rendering
+## Usage
+
+The code is built on Python3 and PyTorch 0.4. CUDA is needed in order to install the module. Our code is extended on the basis of [this repo](https://github.com/daniilidis-group/neural_renderer).
+
+
+To install the module, using
+
+```
+python setup.py install
+```
+
+## Applications
+
+### 0. Rendering
 
 We demonstrate the rendering effects provided by SoftRas. Realistic rendering results (1st and 2nd columns) can be achieved with a proper setting of `sigma` and `gamma`. With larger `sigma` and `gamma`, one can obtain renderings with stronger transparency and blurriness (3rd and 4th column).
 
 ![](https://raw.githubusercontent.com/ShichenLiu/SoftRas/master/data/media/demo/render/forward.gif)
 
-## Applications
+```
+python examples/demo_render.py
+```
+
+(More demos are coming soon)
 
 ### 1. 3D Unsupervised Single-view Mesh Reconstruction
 
