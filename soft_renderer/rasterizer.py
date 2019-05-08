@@ -7,35 +7,6 @@ import torch.nn.functional as F
 import soft_renderer.functional as srf
 
 
-class Rasterizer(nn.Module):
-    def __init__(self, image_size=256, background_color=[0, 0, 0], near=1, far=100, 
-                 anti_aliasing=False, fill_back=False, eps=1e-6):
-        super(Rasterizer, self).__init__()
-
-        self.image_size = image_size
-        self.background_color = background_color
-        self.near = near
-        self.far = far
-        self.anti_aliasing = anti_aliasing
-        self.fill_back = fill_back
-        self.eps = eps
-
-    def forward(self, mesh, mode=None):
-        if self.fill_back:
-            mesh.fill_back_()
-
-        image_size = self.image_size * (2 if self.anti_aliasing else 1)
-
-        images = srf.rasterize(mesh.face_vertices, mesh.face_textures, image_size, 
-                               self.anti_aliasing, self.near, self.far, 
-                               self.eps, self.background_color)
-
-        if self.anti_aliasing:
-            images = F.avg_pool2d(images, kernel_size=2, stride=2)
-
-        return images
-
-
 class SoftRasterizer(nn.Module):
     def __init__(self, image_size=256, background_color=[0, 0, 0], near=1, far=100, 
                  anti_aliasing=False, fill_back=False, eps=1e-3, 
