@@ -19,7 +19,7 @@ Soft Rasterizer (SoftRas) is a truly differentiable renderer framework with a no
 
 ## Usage
 
-The code is built on Python3 and PyTorch 0.4. CUDA is needed in order to install the module. Our code is extended on the basis of [this repo](https://github.com/daniilidis-group/neural_renderer).
+The code is built on Python3 and PyTorch 1.1.0. CUDA is needed in order to install the module. Our code is extended on the basis of [this repo](https://github.com/daniilidis-group/neural_renderer).
 
 
 To install the module, using
