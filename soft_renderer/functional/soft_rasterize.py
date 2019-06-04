@@ -44,10 +44,10 @@ class SoftRasterizeFunction(Function):
         ctx.device = face_vertices.device
         ctx.batch_size, ctx.num_faces = face_vertices.shape[:2]
 
-        faces_info = torch.cuda.FloatTensor(ctx.batch_size, ctx.num_faces, 9*3).fill_(0.0) # [inv*9, sym*9, obt*3, 0*6]
-        aggrs_info = torch.cuda.FloatTensor(ctx.batch_size, 2, ctx.image_size, ctx.image_size).fill_(0.0)
+        faces_info = torch.FloatTensor(ctx.batch_size, ctx.num_faces, 9*3).fill_(0.0).to(device=ctx.device) # [inv*9, sym*9, obt*3, 0*6]
+        aggrs_info = torch.FloatTensor(ctx.batch_size, 2, ctx.image_size, ctx.image_size).fill_(0.0).to(device=ctx.device) 
 
-        soft_colors = torch.cuda.FloatTensor(ctx.batch_size, 4, ctx.image_size, ctx.image_size).fill_(1.0)
+        soft_colors = torch.FloatTensor(ctx.batch_size, 4, ctx.image_size, ctx.image_size).fill_(1.0).to(device=ctx.device) 
         soft_colors[:, 0, :, :] *= background_color[0]
         soft_colors[:, 1, :, :] *= background_color[1]
         soft_colors[:, 2, :, :] *= background_color[2]

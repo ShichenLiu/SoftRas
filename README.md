@@ -37,22 +37,30 @@ We demonstrate the rendering effects provided by SoftRas. Realistic rendering re
 ![](https://raw.githubusercontent.com/ShichenLiu/SoftRas/master/data/media/demo/render/forward.gif)
 
 ```
-python examples/demo_render.py
+CUDA_VISIBLE_DEVICES=0 python examples/demo_render.py
 ```
 
 (More demos are coming soon)
 
-### 1. 3D Unsupervised Single-view Mesh Reconstruction
+### 1. Image-based Shape Deformation
+
+SoftRas provides strong supervision for image-based mesh deformation. We visualize the deformation process from a sphere to a car model and then to a plane given supervision from multi-view silhouette images.
+
+![](https://raw.githubusercontent.com/ShichenLiu/SoftRas/master/data/media/demo/deform/sphere_to_car.gif) ![](https://raw.githubusercontent.com/ShichenLiu/SoftRas/master/data/media/demo/deform/car_to_plane.gif)
+
+```
+CUDA_VISIBLE_DEVICES=0 python examples/demo_deform.py
+```
+
+### 2. 3D Unsupervised Single-view Mesh Reconstruction
 
 By incorporating SoftRas with a simple mesh generator, one can train the network with multi-view images only, without requiring any 3D supervision. At test time, one can reconstruct the 3D mesh, along with the mesh texture, from a single RGB image. Below we show the results of single-view mesh reconstruction on ShapeNet.
 
 ![](https://raw.githubusercontent.com/ShichenLiu/SoftRas/master/data/media/demo/recon_rgb/02691156_150_000867_w_input.gif) ![](https://raw.githubusercontent.com/ShichenLiu/SoftRas/master/data/media/demo/recon_rgb/02958343_150_001155_w_input.gif) ![](https://raw.githubusercontent.com/ShichenLiu/SoftRas/master/data/media/demo/recon_rgb/03001627_150_002475_w_input.gif) ![](https://raw.githubusercontent.com/ShichenLiu/SoftRas/master/data/media/demo/recon_rgb/04090263_150_004755_w_input.gif) ![](https://raw.githubusercontent.com/ShichenLiu/SoftRas/master/data/media/demo/recon_rgb/04256520_150_004035_w_input.gif) ![](https://raw.githubusercontent.com/ShichenLiu/SoftRas/master/data/media/demo/recon_rgb/04379243_150_000843_w_input.gif)
 
-### 2. Image-based Shape Deformation
-
-SoftRas provides strong supervision for image-based mesh deformation. We visualize the deformation process from a sphere to a car model and then to a plane given supervision from multi-view silhouette images.
-
-![](https://raw.githubusercontent.com/ShichenLiu/SoftRas/master/data/media/demo/deform/sphere_to_car.gif) ![](https://raw.githubusercontent.com/ShichenLiu/SoftRas/master/data/media/demo/deform/car_to_plane.gif)
+```
+Training and testing code and models will be available upon pulication
+```
 
 ### 3. Pose Optimization for Rigid Objects
 
