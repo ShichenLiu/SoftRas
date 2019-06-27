@@ -62,7 +62,7 @@ class SoftRasterizeFunction(Function):
                                                        ctx.texture_type, fill_back)
 
         ctx.save_for_backward(face_vertices, textures, soft_colors, faces_info, aggrs_info)
-        return soft_colors # return d^2
+        return soft_colors
 
     @staticmethod
     def backward(ctx, grad_soft_colors):

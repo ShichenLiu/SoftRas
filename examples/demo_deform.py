@@ -38,7 +38,7 @@ class Model(nn.Module):
         centroid = torch.tanh(self.center)
         vertices = torch.sigmoid(base + self.displace) * torch.sign(self.vertices)
         vertices = F.relu(vertices) * (1 - centroid) - F.relu(-vertices) * (centroid + 1)
-        vertices = (vertices + centroid) * 2.0
+        vertices = vertices + centroid
 
         # define Laplacian and flatten geometry constraints
         laplacian_loss = self.laplacian_loss(vertices).mean()
@@ -62,7 +62,7 @@ def main():
     parser.add_argument('-c', '--camera-input', type=str, 
         default=os.path.join(data_dir, 'camera.npy'))
     parser.add_argument('-t', '--template-mesh', type=str, 
-        default=os.path.join(data_dir, 'obj/sphere/sphere_642.obj'))
+        default=os.path.join(data_dir, 'obj/sphere/sphere_1352.obj'))
     parser.add_argument('-o', '--output-dir', type=str, 
         default=os.path.join(data_dir, 'results/output_deform'))
     parser.add_argument('-b', '--batch-size', type=int,
@@ -72,8 +72,8 @@ def main():
     os.makedirs(args.output_dir, exist_ok=True)
 
     model = Model(args.template_mesh).cuda()
-    renderer = sr.SoftRenderer(image_size=64, sigma_val=3e-5, aggr_func_rgb='hard', 
-                               camera_mode='look_at')
+    renderer = sr.SoftRenderer(image_size=64, sigma_val=1e-4, aggr_func_rgb='hard', 
+                               camera_mode='look_at', viewing_angle=15)
 
     images = np.load(args.filename_input).astype('float32') / 255.
     cameras = np.load(args.camera_input).astype('float32')
@@ -84,7 +84,7 @@ def main():
     viewpoints = torch.from_numpy(cameras[:, 2])
     renderer.transform.set_eyes_from_angles(camera_distances, elevations, viewpoints)
 
-    loop = tqdm.tqdm(list(range(0, 20000)))
+    loop = tqdm.tqdm(list(range(0, 2000)))
     writer = imageio.get_writer(os.path.join(args.output_dir, 'deform.gif'), mode='I')
     for i in loop:
         images_gt = torch.from_numpy(images).cuda()
@@ -92,7 +92,7 @@ def main():
         mesh, laplacian_loss, flatten_loss = model(args.batch_size)
         images_pred = renderer.render_mesh(mesh)
 
-        loss = neg_iou_loss(images_pred[:, 3], images_gt[:, 3]) + 0.03 * laplacian_loss + 0.001 * flatten_loss
+        loss = neg_iou_loss(images_pred[:, 3], images_gt[:, 3]) + 0.03 * laplacian_loss + 0.0003 * flatten_loss
 
         loop.set_description('Loss: %.4f'%(loss.item()))
 
@@ -103,6 +103,7 @@ def main():
         if i % 100 == 0:
             image = images_pred.detach().cpu().numpy()[0].transpose((1, 2, 0))
             writer.append_data((255*image).astype(np.uint8))
+            imageio.imsave(os.path.join(args.output_dir, 'deform_%05d.png'%i), (255*image[..., -1]).astype(np.uint8))
 
     model(1)[0].save_obj(os.path.join(args.output_dir, 'plane.obj'), save_texture=False)
 

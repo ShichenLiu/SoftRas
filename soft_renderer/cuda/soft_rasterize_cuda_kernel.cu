@@ -523,6 +523,7 @@ __global__ void backward_soft_rasterize_cuda_kernel(
         scalar_t dis_y;
         scalar_t t[3];
         scalar_t w[3];
+        scalar_t w0[3];
         scalar_t sign;
         scalar_t soft_fragment;
 
@@ -542,7 +543,7 @@ __global__ void backward_soft_rasterize_cuda_kernel(
         if (func_id_dist == 2) { // euclidean distance
             euclidean_p2f_distance(sign, dis_x, dis_y, w, t, face, face_info, xp, yp);
             dis = dis_x * dis_x + dis_y * dis_y;
-            if (sign < 0 && dis >= threshold) continue; // ignore triangle too far away from the pixel, sigmoid(-9) = 0.000123
+            if (sign < 0 && dis >= threshold) continue; // ignore triangle too far away from the pixel
             soft_fragment = 1. / (1. + exp(-sign * dis / sigma_val));
         }
 
@@ -568,6 +569,7 @@ __global__ void backward_soft_rasterize_cuda_kernel(
         C_grad_xy += C_grad_xy_alpha;
 
         /////////////////////////////////////////////////////
+        for (int k = 0; k < 3; k++) w0[k] = w[k];
         barycentric_clip(w);
         const scalar_t zp = 1. / (w[0] / face[2] + w[1] / face[5] + w[2] / face[8]);
         if (zp < near || zp > far) continue; // triangle out of screen, pass
@@ -597,7 +599,7 @@ __global__ void backward_soft_rasterize_cuda_kernel(
                 }
 
                 const scalar_t color_k = forward_sample_texture(texture, w, texture_res, k, texture_sample_type);
-                C_grad_xyz_rgb += grad_soft_color_k * (color_k - soft_colors[(bn * 4 + k) * (is * is) + pn]);// * soft_fragment;
+                C_grad_xyz_rgb += grad_soft_color_k * (color_k - soft_colors[(bn * 4 + k) * (is * is) + pn]);
             }
             C_grad_xyz_rgb *= zp_softmax;
             C_grad_xy += C_grad_xyz_rgb / soft_fragment;
@@ -618,21 +620,21 @@ __global__ void backward_soft_rasterize_cuda_kernel(
         if (func_id_dist == 2) { // euclidean distance
             for (int k = 0; k < 3; k++) {
                 for (int l = 0; l < 2; l++) {
-                    grad_v[k][l] = 2 * sign * C_grad_xy * (t[k] + w[k]) * (l == 0 ? dis_x : dis_y);
+                    grad_v[k][l] = 2 * sign * C_grad_xy * (t[k] + w0[k]) * (l == 0 ? dis_x : dis_y);
                 }
             }
         }
 
-        atomicAdd(&grad_face[0], grad_v[0][0]);// * sigma_val);
-        atomicAdd(&grad_face[1], grad_v[0][1]);// * sigma_val);
-        atomicAdd(&grad_face[3], grad_v[1][0]);// * sigma_val);
-        atomicAdd(&grad_face[4], grad_v[1][1]);// * sigma_val);
-        atomicAdd(&grad_face[6], grad_v[2][0]);// * sigma_val);
-        atomicAdd(&grad_face[7], grad_v[2][1]);// * sigma_val);
+        atomicAdd(&grad_face[0], grad_v[0][0]);
+        atomicAdd(&grad_face[1], grad_v[0][1]);
+        atomicAdd(&grad_face[3], grad_v[1][0]);
+        atomicAdd(&grad_face[4], grad_v[1][1]);
+        atomicAdd(&grad_face[6], grad_v[2][0]);
+        atomicAdd(&grad_face[7], grad_v[2][1]);
 
-        atomicAdd(&grad_face[2], grad_v[0][2]);// * gamma_val);
-        atomicAdd(&grad_face[5], grad_v[1][2]);// * gamma_val);
-        atomicAdd(&grad_face[8], grad_v[2][2]);// * gamma_val);
+        atomicAdd(&grad_face[2], grad_v[0][2]);
+        atomicAdd(&grad_face[5], grad_v[1][2]);
+        atomicAdd(&grad_face[8], grad_v[2][2]);
     }
 }
 

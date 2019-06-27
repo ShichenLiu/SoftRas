@@ -104,5 +104,9 @@ venv.bak/
 .mypy_cache/
 
 data/results
+data/datasets
+
+examples/unsupervised_recon
+examples/recon
 
 .DS_Store
