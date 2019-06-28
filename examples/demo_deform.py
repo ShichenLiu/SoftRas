@@ -22,14 +22,17 @@ class Model(nn.Module):
     def __init__(self, template_path):
         super(Model, self).__init__()
 
+        # set template mesh
         self.template_mesh = sr.Mesh.from_obj(template_path)
         self.register_buffer('vertices', self.template_mesh.vertices * 0.5)
         self.register_buffer('faces', self.template_mesh.faces)
         self.register_buffer('textures', self.template_mesh.textures)
 
+        # optimize for displacement map and center
         self.register_parameter('displace', nn.Parameter(torch.zeros_like(self.template_mesh.vertices)))
         self.register_parameter('center', nn.Parameter(torch.zeros(1, 1, 3)))
 
+        # define Laplacian and flatten geometry constraints
         self.laplacian_loss = sr.LaplacianLoss(self.vertices[0].cpu(), self.faces[0].cpu())
         self.flatten_loss = sr.FlattenLoss(self.faces[0].cpu())
 
@@ -40,7 +43,7 @@ class Model(nn.Module):
         vertices = F.relu(vertices) * (1 - centroid) - F.relu(-vertices) * (centroid + 1)
         vertices = vertices + centroid
 
-        # define Laplacian and flatten geometry constraints
+        # apply Laplacian and flatten geometry constraints
         laplacian_loss = self.laplacian_loss(vertices).mean()
         flatten_loss = self.flatten_loss(vertices).mean()
 
@@ -75,6 +78,7 @@ def main():
     renderer = sr.SoftRenderer(image_size=64, sigma_val=1e-4, aggr_func_rgb='hard', 
                                camera_mode='look_at', viewing_angle=15)
 
+    # read training images and camera poses
     images = np.load(args.filename_input).astype('float32') / 255.
     cameras = np.load(args.camera_input).astype('float32')
     optimizer = torch.optim.Adam(model.parameters(), 0.01, betas=(0.5, 0.99))
@@ -92,7 +96,11 @@ def main():
         mesh, laplacian_loss, flatten_loss = model(args.batch_size)
         images_pred = renderer.render_mesh(mesh)
 
-        loss = neg_iou_loss(images_pred[:, 3], images_gt[:, 3]) + 0.03 * laplacian_loss + 0.0003 * flatten_loss
+        # optimize mesh with silhouette reprojection error and 
+        # geometry constraints
+        loss = neg_iou_loss(images_pred[:, 3], images_gt[:, 3]) + \
+               0.03 * laplacian_loss + \
+               0.0003 * flatten_loss
 
         loop.set_description('Loss: %.4f'%(loss.item()))
 
@@ -105,6 +113,7 @@ def main():
             writer.append_data((255*image).astype(np.uint8))
             imageio.imsave(os.path.join(args.output_dir, 'deform_%05d.png'%i), (255*image[..., -1]).astype(np.uint8))
 
+    # save optimized mesh
     model(1)[0].save_obj(os.path.join(args.output_dir, 'plane.obj'), save_texture=False)
 
 
