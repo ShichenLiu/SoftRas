@@ -52,6 +52,8 @@ SoftRas provides strong supervision for image-based mesh deformation. We visuali
 CUDA_VISIBLE_DEVICES=0 python examples/demo_deform.py
 ```
 
+The optimized mesh is included in `data/obj/plane/plane.obj`
+
 ### 2. 3D Unsupervised Single-view Mesh Reconstruction
 
 By incorporating SoftRas with a simple mesh generator, one can train the network with multi-view images only, without requiring any 3D supervision. At test time, one can reconstruct the 3D mesh, along with the mesh texture, from a single RGB image. Below we show the results of single-view mesh reconstruction on ShapeNet.
