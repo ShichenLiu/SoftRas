@@ -67,61 +67,7 @@ __global__ void create_texture_image_cuda_kernel(
         for (int k = 0; k < 3; k++)
             image[i * 3 + k] = texture[((R - 1 - w_y) * R + (R - 1 - w_x)) * 3 + k];
     }
-
-    // /* get texture index (scalar_t) */
-    // scalar_t texture_index_scalar_t[3];
-    // for (int k = 0; k < 3; k++) {
-    //     scalar_t tif = w[k] * (tsi - 1);
-    //     tif = max(tif, 0.);
-    //     tif = min(tif, tsi - 1 - eps);
-    //     texture_index_scalar_t[k] = tif;
-    // }
-
-    // /* blend */
-    // scalar_t new_pixel[3] = {0, 0, 0};
-    // for (int pn = 0; pn < 8; pn++) {
-    //     scalar_t w = 1;                         // weight
-    //     int texture_index_int[3];            // index in source (int)
-    //     for (int k = 0; k < 3; k++) {
-    //         if ((pn >> k) % 2 == 0) {
-    //             w *= 1 - (texture_index_scalar_t[k] - (int)texture_index_scalar_t[k]);
-    //             texture_index_int[k] = (int)texture_index_scalar_t[k];
-    //         }
-    //         else {
-    //             w *= texture_index_scalar_t[k] - (int)texture_index_scalar_t[k];
-    //             texture_index_int[k] = (int)texture_index_scalar_t[k] + 1;
-    //         }
-    //     }
-    //     int isc = texture_index_int[0] * tsi * tsi + texture_index_int[1] * tsi + texture_index_int[2];
-    //     for (int k = 0; k < 3; k++)
-    //         new_pixel[k] += w * texture[isc * 3 + k];
-    // }
-    // for (int k = 0; k < 3; k++)
-    //     image[i * 3 + k] = new_pixel[k];
 }
-
-// didn't really look to see if we fuse the 2 kernels
-// probably not because of synchronization issues
-// template<typename scalar_t>
-// __global__ void create_texture_image_boundary_cuda_kernel(
-//         scalar_t* image,
-//         size_t image_size,
-//         size_t texture_res_out,
-//         size_t tile_width) {
-
-//     const int i = blockIdx.x * blockDim.x + threadIdx.x;
-//     if (i >= image_size / 3) {
-//         return;
-//     }
-
-//     const int x = i % (tile_width * texture_res_out);
-//     const int y = i / (tile_width * texture_res_out);
-//     if ((y % texture_res_out + 1) == (x % texture_res_out)) {
-//       for (int k = 0; k < 3; k++)
-//           image[i * 3 + k] = 
-//               image[(y * tile_width * texture_res_out + (x - 1))  * 3 + k];
-//     }
-// }
 
 }
 

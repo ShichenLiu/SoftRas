@@ -108,5 +108,6 @@ data/datasets
 
 examples/unsupervised_recon
 examples/recon
+examples/photo_recon
 
 .DS_Store
