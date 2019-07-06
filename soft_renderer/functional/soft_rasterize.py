@@ -95,8 +95,7 @@ class SoftRasterizeFunction(Function):
                                                         gamma_val, func_rgb_type, func_alpha_type,
                                                         texture_type, fill_back)
 
-        return grad_faces, grad_textures, None, None, None, None, None, None, 
-               None, None, None, None, None, None, None
+        return grad_faces, grad_textures, None, None, None, None, None, None, None, None, None, None, None, None, None
 
 
 def soft_rasterize(face_vertices, textures, image_size=256, 
