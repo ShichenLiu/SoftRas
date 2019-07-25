@@ -1,6 +1,6 @@
 # Soft Rasterizer (SoftRas)
 
-This repository contains the code (in PyTorch) for "[Soft Rasterizer: A Differentiable Renderer for Image-based 3D Reasoning](https://arxiv.org/abs/1904.01786)" paper by [Shichen Liu](https://shichenliu.github.io), [Tianye Li](https://sites.google.com/site/tianyefocus/home), [Weikai Chen](http://chenweikai.github.io/) and [Hao Li](https://www.hao-li.com/Hao_Li/Hao_Li_-_about_me.html).
+This repository contains the code (in PyTorch) for "[Soft Rasterizer: A Differentiable Renderer for Image-based 3D Reasoning](https://arxiv.org/abs/1904.01786)" (ICCV'2019 Oral) by [Shichen Liu](https://shichenliu.github.io), [Tianye Li](https://sites.google.com/site/tianyefocus/home), [Weikai Chen](http://chenweikai.github.io/) and [Hao Li](https://www.hao-li.com/Hao_Li/Hao_Li_-_about_me.html).
 
 ## Contents
 
