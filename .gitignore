@@ -104,6 +104,7 @@ venv.bak/
 .mypy_cache/
 
 data/results
+data/test
 data/datasets
 
 examples/unsupervised_recon
