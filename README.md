@@ -91,7 +91,8 @@ If you find our project useful in your research, please consider citing:
 @article{liu2019softras,
   title={Soft Rasterizer: A Differentiable Renderer for Image-based 3D Reasoning},
   author={Liu, Shichen and Li, Tianye and Chen, Weikai and Li, Hao},
-  journal={arXiv preprint arXiv:1904.01786},
+  journal={The IEEE International Conference on Computer Vision (ICCV)},
+  month = {Oct},
   year={2019}
 }
 ```
