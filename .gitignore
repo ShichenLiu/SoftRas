@@ -108,7 +108,8 @@ data/test
 data/datasets
 
 examples/unsupervised_recon
-examples/recon
 examples/photo_recon
+examples/recon/demo.py
+examples/recon/script.sh
 
 .DS_Store
