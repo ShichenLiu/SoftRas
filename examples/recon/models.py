@@ -105,6 +105,10 @@ class Model(nn.Module):
     def set_sigma(self, sigma):
         self.renderer.set_sigma(sigma)
 
+    def reconstruct(self, images):
+        vertices, faces = self.decoder(self.encoder(images))
+        return vertices, faces
+
     def predict_multiview(self, image_a, image_b, viewpoint_a, viewpoint_b):
         batch_size = image_a.size(0)
         # [Ia, Ib]
@@ -113,7 +117,7 @@ class Model(nn.Module):
         viewpoints = torch.cat((viewpoint_a, viewpoint_a, viewpoint_b, viewpoint_b), dim=0)
         self.renderer.transform.set_eyes(viewpoints)
 
-        vertices, faces = self.decoder(self.encoder(images))
+        vertices, faces = self.reconstruct(images)
         laplacian_loss = self.laplacian_loss(vertices)
         flatten_loss = self.flatten_loss(vertices)
 
@@ -126,7 +130,7 @@ class Model(nn.Module):
         return silhouettes.chunk(4, dim=0), laplacian_loss, flatten_loss
 
     def evaluate_iou(self, images, voxels):
-        vertices, faces = self.decoder(self.encoder(images))
+        vertices, faces = self.reconstruct(images)
 
         faces_ = srf.face_vertices(vertices, faces).data
         faces_norm = faces_ * 1. * (32. - 1) / 32. + 0.5

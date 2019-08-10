@@ -106,6 +106,7 @@ venv.bak/
 data/results
 data/test
 data/datasets
+data/*.zip
 
 examples/unsupervised_recon
 examples/photo_recon
