@@ -154,7 +154,8 @@ class Mesh(object):
             vertices, faces, textures = srf.load_obj(filename_obj,
                                                      normalization=normalization,
                                                      texture_res=texture_res,
-                                                     load_texture=True)
+                                                     load_texture=True,
+                                                     texture_type=texture_type)
         else:
             vertices, faces = srf.load_obj(filename_obj,
                                            normalization=normalization,

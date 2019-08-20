@@ -549,7 +549,7 @@ __global__ void backward_soft_rasterize_cuda_kernel(
 
 
         scalar_t* grad_face = &grad_faces[(bn * nf + fn) * 9];
-        scalar_t* grad_texture = &grad_textures[(bn * nf + fn) * texture_size];
+        scalar_t* grad_texture = &grad_textures[(bn * nf + fn) * texture_size * 3];
         scalar_t grad_v[3][3] = {0};
         scalar_t C_grad_xy = 0;
 
