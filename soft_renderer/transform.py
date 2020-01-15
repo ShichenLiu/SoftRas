@@ -16,7 +16,7 @@ class Projection(nn.Module):
 
         if isinstance(self.P, np.ndarray):
             self.P = torch.from_numpy(self.P).cuda()
-        if self.P is None or P.ndimension() != 3 or self.P.shape[1] != 3 or self.P.shape[2] != 4:
+        if self.P is None or self.P.ndimension() != 3 or self.P.shape[1] != 3 or self.P.shape[2] != 4:
             raise ValueError('You need to provide a valid (batch_size)x3x4 projection matrix')
         if dist_coeffs is None:
             self.dist_coeffs = torch.cuda.FloatTensor([[0., 0., 0., 0., 0.]]).repeat(P.shape[0], 1)
