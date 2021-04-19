@@ -44,10 +44,19 @@ class SoftRasterizeFunction(Function):
         ctx.device = face_vertices.device
         ctx.batch_size, ctx.num_faces = face_vertices.shape[:2]
 
-        faces_info = torch.FloatTensor(ctx.batch_size, ctx.num_faces, 9*3).fill_(0.0).to(device=ctx.device) # [inv*9, sym*9, obt*3, 0*6]
-        aggrs_info = torch.FloatTensor(ctx.batch_size, 2, ctx.image_size, ctx.image_size).fill_(0.0).to(device=ctx.device) 
+        faces_info = torch.zeros(
+            (ctx.batch_size, ctx.num_faces, 9 * 3),
+            dtype=torch.float32,
+            device=ctx.device)  # [inv*9, sym*9, obt*3, 0*6]
+        aggrs_info = torch.zeros(
+            (ctx.batch_size, 2, ctx.image_size, ctx.image_size),
+            dtype=torch.float32,
+            device=ctx.device)
 
-        soft_colors = torch.FloatTensor(ctx.batch_size, 4, ctx.image_size, ctx.image_size).fill_(1.0).to(device=ctx.device) 
+        soft_colors = torch.ones(
+            (ctx.batch_size, 4, ctx.image_size, ctx.image_size),
+            dtype=torch.float32,
+            device=ctx.device)
         soft_colors[:, 0, :, :] *= background_color[0]
         soft_colors[:, 1, :, :] *= background_color[1]
         soft_colors[:, 2, :, :] *= background_color[2]
@@ -82,14 +91,18 @@ class SoftRasterizeFunction(Function):
         texture_type = ctx.texture_type
         fill_back = ctx.fill_back
 
-        grad_faces = torch.zeros_like(face_vertices, dtype=torch.float32).to(ctx.device).contiguous()
-        grad_textures = torch.zeros_like(textures, dtype=torch.float32).to(ctx.device).contiguous()
+        grad_faces = torch.zeros_like(face_vertices,
+                                      dtype=torch.float32,
+                                      device=ctx.device)
+        grad_textures = torch.zeros_like(textures,
+                                         dtype=torch.float32,
+                                         device=ctx.device)
         grad_soft_colors = grad_soft_colors.contiguous()
 
         grad_faces, grad_textures = \
-            soft_rasterize_cuda.backward_soft_rasterize(face_vertices, textures, soft_colors, 
+            soft_rasterize_cuda.backward_soft_rasterize(face_vertices, textures, soft_colors,
                                                         faces_info, aggrs_info,
-                                                        grad_faces, grad_textures, grad_soft_colors, 
+                                                        grad_faces, grad_textures, grad_soft_colors,
                                                         image_size, near, far, eps,
                                                         sigma_val, func_dist_type, dist_eps,
                                                         gamma_val, func_rgb_type, func_alpha_type,
