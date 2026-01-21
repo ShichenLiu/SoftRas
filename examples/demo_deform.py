@@ -77,7 +77,7 @@ def main():
     model = Model(args.template_mesh).cuda()
     transform = sr.LookAt(viewing_angle=15)
     lighting = sr.Lighting()
-    rasterizer = sr.SoftRasterizer(image_size=64, sigma_val=1e-4, aggr_func_rgb='hard')
+    rasterizer = sr.SoftRasterizer(image_size=(64, 64), sigma_val=1e-4, aggr_func_rgb='hard')
 
     # read training images and camera poses
     images = np.load(args.filename_input).astype('float32') / 255.

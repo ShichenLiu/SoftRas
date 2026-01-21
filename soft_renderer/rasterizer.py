@@ -8,7 +8,7 @@ import soft_renderer.functional as srf
 
 
 class SoftRasterizer(nn.Module):
-    def __init__(self, image_size=256, background_color=[0, 0, 0], near=1, far=100,
+    def __init__(self, image_size=(256, 256), background_color=[0, 0, 0], near=1, far=100,
                  anti_aliasing=False, fill_back=False, eps=1e-3,
                  sigma_val=1e-5, dist_func='euclidean', dist_eps=1e-4,
                  gamma_val=1e-4, aggr_func_rgb='softmax', aggr_func_alpha='prod',
@@ -46,7 +46,10 @@ class SoftRasterizer(nn.Module):
         self.gamma_val = gamma
 
     def forward(self, mesh, mode=None):
-        image_size = self.image_size * (2 if self.anti_aliasing else 1)
+        image_size = self.image_size
+        if self.anti_aliasing:
+            image_size[0] *= 2
+            image_size[1] *= 2
 
         images = srf.soft_rasterize(mesh.face_vertices, mesh.face_textures, image_size,
                                     self.background_color, self.near, self.far,

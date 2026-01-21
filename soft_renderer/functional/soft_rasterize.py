@@ -9,7 +9,7 @@ import soft_renderer.cuda.soft_rasterize as soft_rasterize_cuda
 class SoftRasterizeFunction(Function):
 
     @staticmethod
-    def forward(ctx, face_vertices, textures, image_size=256,
+    def forward(ctx, face_vertices, textures, image_size=(256, 256),
                 background_color=[0, 0, 0], near=1, far=100,
                 fill_back=True, eps=1e-3,
                 sigma_val=1e-5, dist_func='euclidean', dist_eps=1e-4,
@@ -49,11 +49,11 @@ class SoftRasterizeFunction(Function):
             dtype=torch.float32,
             device=ctx.device)  # [inv*9, sym*9, obt*3, 0*6]
         aggrs_info = torch.zeros(
-            (ctx.batch_size, 2, ctx.image_size, ctx.image_size),
+            (ctx.batch_size, 2, ctx.image_size[1], ctx.image_size[0]),
             dtype=torch.float32,
             device=ctx.device)
         soft_colors = torch.ones(
-            (ctx.batch_size, 4, ctx.image_size, ctx.image_size),
+            (ctx.batch_size, 4, ctx.image_size[1], ctx.image_size[0]),
             dtype=torch.float32,
             device=ctx.device)
 
@@ -65,7 +65,7 @@ class SoftRasterizeFunction(Function):
             soft_rasterize_cuda.forward_soft_rasterize(face_vertices, textures,
                                                        faces_info, aggrs_info,
                                                        soft_colors,
-                                                       image_size, near, far, eps,
+                                                       image_size[0], image_size[1], near, far, eps,
                                                        sigma_val, ctx.func_dist_type, ctx.dist_eps,
                                                        gamma_val, ctx.func_rgb_type, ctx.func_alpha_type,
                                                        ctx.texture_type, fill_back)
@@ -103,7 +103,7 @@ class SoftRasterizeFunction(Function):
             soft_rasterize_cuda.backward_soft_rasterize(face_vertices, textures, soft_colors,
                                                         faces_info, aggrs_info,
                                                         grad_faces, grad_textures, grad_soft_colors,
-                                                        image_size, near, far, eps,
+                                                        image_size[0], image_size[1], near, far, eps,
                                                         sigma_val, func_dist_type, dist_eps,
                                                         gamma_val, func_rgb_type, func_alpha_type,
                                                         texture_type, fill_back)
@@ -111,7 +111,7 @@ class SoftRasterizeFunction(Function):
         return grad_faces, grad_textures, None, None, None, None, None, None, None, None, None, None, None, None, None
 
 
-def soft_rasterize(face_vertices, textures, image_size=256,
+def soft_rasterize(face_vertices, textures, image_size=(256, 256),
                    background_color=[0, 0, 0], near=1, far=100,
                    fill_back=True, eps=1e-3,
                    sigma_val=1e-5, dist_func='euclidean', dist_eps=1e-4,
