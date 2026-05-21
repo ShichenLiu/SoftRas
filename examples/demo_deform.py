@@ -74,7 +74,9 @@ def main():
 
     os.makedirs(args.output_dir, exist_ok=True)
 
-    model = Model(args.template_mesh).cuda()
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    model = Model(args.template_mesh).to(device)
     transform = sr.LookAt(viewing_angle=15)
     lighting = sr.Lighting()
     rasterizer = sr.SoftRasterizer(image_size=64, sigma_val=1e-4, aggr_func_rgb='hard')
@@ -92,7 +94,7 @@ def main():
     loop = tqdm.tqdm(list(range(0, 2000)))
     writer = imageio.get_writer(os.path.join(args.output_dir, 'deform.gif'), mode='I')
     for i in loop:
-        images_gt = torch.from_numpy(images).cuda()
+        images_gt = torch.from_numpy(images).to(device)
 
         mesh, laplacian_loss, flatten_loss = model(args.batch_size)
 

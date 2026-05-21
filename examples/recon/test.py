@@ -51,9 +51,10 @@ if args.shading_model:
     model = models_large.Model('data/obj/sphere/sphere_642.obj', args=args)
 else:
     model = models.Model('data/obj/sphere/sphere_642.obj', args=args)
-model = model.cuda()
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model = model.to(device)
 
-state_dicts = torch.load(args.model_directory)
+state_dicts = torch.load(args.model_directory, map_location=device)
 # import ipdb; ipdb.set_trace()
 model.load_state_dict(state_dicts['model'], strict=True)
 model.eval()
@@ -83,7 +84,7 @@ def test():
         iou = 0
 
         for i, (im, vx) in enumerate(dataset_val.get_all_batches_for_evaluation(args.batch_size, class_id)):
-            images = torch.autograd.Variable(im).cuda()
+            images = im.to(device)
             voxels = vx.numpy()
 
             batch_iou, vertices, faces = model(images, voxels=voxels, task='test')

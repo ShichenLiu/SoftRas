@@ -6,6 +6,12 @@ from skimage.io import imsave
 import soft_renderer.cuda.create_texture_image as create_texture_image_cuda
 
 
+def _extension_device(tensor=None):
+    if tensor is not None and torch.is_tensor(tensor) and tensor.is_cuda:
+        return tensor.device
+    return torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+
 def create_texture_image(textures, texture_res=16):
     num_faces = textures.shape[0]
     tile_width = int((num_faces - 1.) ** 0.5) + 1
@@ -21,10 +27,17 @@ def create_texture_image(textures, texture_res=16):
     vertices[:, 1, 1] = (row + 1) * texture_res - 1 - 1
     vertices[:, 2, 0] = (column + 1) * texture_res - 1 - 1
     vertices[:, 2, 1] = (row + 1) * texture_res - 1 - 1
-    image = image.cuda()
-    vertices = vertices.cuda()
-    textures = textures.cuda()
-    image = create_texture_image_cuda.create_texture_image(vertices, textures, image, 1e-5)
+
+    device = _extension_device(textures)
+    image = image.to(device)
+    vertices = vertices.to(device)
+    textures = textures.to(device)
+    image = create_texture_image_cuda.create_texture_image(
+        vertices.contiguous(),
+        textures.contiguous(),
+        image.contiguous(),
+        1e-5,
+    )
 
     vertices[:, :, 0] /= (image.shape[1] - 1)
     vertices[:, :, 1] /= (image.shape[0] - 1)
@@ -42,6 +55,11 @@ def save_obj(filename, vertices, faces, textures=None, texture_res=16, texture_t
     assert texture_type in ['surface', 'vertex']
     assert texture_res >= 2
 
+    filename_mtl = None
+    filename_texture = None
+    material_name = None
+    vertices_textures = None
+
     if textures is not None and texture_type == 'surface':
         filename_mtl = filename[:-4] + '.mtl'
         filename_texture = filename[:-4] + '.png'
@@ -51,23 +69,25 @@ def save_obj(filename, vertices, faces, textures=None, texture_res=16, texture_t
         texture_image = (texture_image * 255).astype('uint8')
         imsave(filename_texture, texture_image)
 
-    faces = faces.detach().cpu().numpy()
+    vertices_np = vertices.detach().cpu().numpy()
+    faces_np = faces.detach().cpu().numpy()
+    textures_np = None if textures is None else textures.detach().cpu().numpy()
 
     with open(filename, 'w') as f:
         f.write('# %s\n' % os.path.basename(filename))
         f.write('#\n')
         f.write('\n')
 
-        if textures is not None:
+        if filename_mtl is not None:
             f.write('mtllib %s\n\n' % os.path.basename(filename_mtl))
 
         if textures is not None and texture_type == 'vertex':
-            for vertex, color in zip(vertices, textures):
+            for vertex, color in zip(vertices_np, textures_np):
                 f.write('v %.8f %.8f %.8f %.8f %.8f %.8f\n' % (vertex[0], vertex[1], vertex[2],
                                                                color[0], color[1], color[2]))
             f.write('\n')
         else:
-            for vertex in vertices:
+            for vertex in vertices_np:
                 f.write('v %.8f %.8f %.8f\n' % (vertex[0], vertex[1], vertex[2]))
             f.write('\n')
 
@@ -77,15 +97,15 @@ def save_obj(filename, vertices, faces, textures=None, texture_res=16, texture_t
             f.write('\n')
 
             f.write('usemtl %s\n' % material_name)
-            for i, face in enumerate(faces):
+            for i, face in enumerate(faces_np):
                 f.write('f %d/%d %d/%d %d/%d\n' % (
                     face[0] + 1, 3 * i + 1, face[1] + 1, 3 * i + 2, face[2] + 1, 3 * i + 3))
             f.write('\n')
         else:
-            for face in faces:
+            for face in faces_np:
                 f.write('f %d %d %d\n' % (face[0] + 1, face[1] + 1, face[2] + 1))
 
-    if textures is not None and texture_type == 'surface':
+    if filename_mtl is not None:
         with open(filename_mtl, 'w') as f:
             f.write('newmtl %s\n' % material_name)
             f.write('map_Kd %s\n' % os.path.basename(filename_texture))
@@ -98,5 +118,6 @@ def save_voxel(filename, voxel):
             for k in range(voxel.shape[2]):
                 if voxel[i, j, k] == 1:
                     vertices.append([i / voxel.shape[0], j / voxel.shape[1], k / voxel.shape[2]])
-    vertices = torch.autograd.Variable(torch.tensor(vertices))
-    return save_obj(filename, vertices, torch.autograd.Variable(torch.tensor([])))
+    vertices = torch.tensor(vertices, dtype=torch.float32)
+    faces = torch.empty((0, 3), dtype=torch.int32)
+    return save_obj(filename, vertices, faces)

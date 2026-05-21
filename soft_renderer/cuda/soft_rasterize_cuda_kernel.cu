@@ -1,10 +1,15 @@
 #include <ATen/ATen.h>
+#include <ATen/cuda/CUDAContext.h>
+
+#include <c10/cuda/CUDAException.h>
+
+#include <cmath>
 
 #include <cuda.h>
 #include <cuda_runtime.h>
 
 // for the older gpus atomicAdd with double arguments does not exist
-#if  __CUDA_ARCH__ < 600 and defined(__CUDA_ARCH__)
+#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 600)
 static __inline__ __device__ double atomicAdd(double* address, double val) {
     unsigned long long int* address_as_ull = (unsigned long long int*)address;
     unsigned long long int old = *address_as_ull, assumed;
@@ -669,7 +674,8 @@ std::vector<at::Tensor> forward_soft_rasterize_cuda(
     const dim3 blocks_1 ((batch_size * num_faces - 1) / threads +1);
 
     AT_DISPATCH_FLOATING_TYPES(faces.scalar_type(), "forward_soft_rasterize_inv_cuda", ([&] {
-      forward_soft_rasterize_inv_cuda_kernel<scalar_t><<<blocks_1, threads>>>(
+      const cudaStream_t stream = at::cuda::getCurrentCUDAStream();
+      forward_soft_rasterize_inv_cuda_kernel<scalar_t><<<blocks_1, threads, 0, stream>>>(
           faces.data_ptr<scalar_t>(),
           faces_info.data_ptr<scalar_t>(),
           batch_size,
@@ -677,14 +683,13 @@ std::vector<at::Tensor> forward_soft_rasterize_cuda(
           image_size);
       }));
 
-    cudaError_t err = cudaGetLastError();
-    if (err != cudaSuccess) 
-            printf("Error in forward_transform_inv_triangle: %s\n", cudaGetErrorString(err));
+    C10_CUDA_KERNEL_LAUNCH_CHECK();
 
     const dim3 blocks_2 ((batch_size * image_size * image_size - 1) / threads +1);
 
     AT_DISPATCH_FLOATING_TYPES(faces.scalar_type(), "forward_eff_soft_rasterize_cuda", ([&] {
-      forward_soft_rasterize_cuda_kernel<scalar_t><<<blocks_2, threads>>>(
+      const cudaStream_t stream = at::cuda::getCurrentCUDAStream();
+      forward_soft_rasterize_cuda_kernel<scalar_t><<<blocks_2, threads, 0, stream>>>(
           faces.data_ptr<scalar_t>(),
           textures.data_ptr<scalar_t>(),
           faces_info.data_ptr<scalar_t>(),
@@ -708,9 +713,7 @@ std::vector<at::Tensor> forward_soft_rasterize_cuda(
           double_side);
       }));
 
-    err = cudaGetLastError();
-    if (err != cudaSuccess) 
-        printf("Error in forward_soft_rasterize: %s\n", cudaGetErrorString(err));
+    C10_CUDA_KERNEL_LAUNCH_CHECK();
 
     return {faces_info, aggrs_info, soft_colors};
 }
@@ -746,7 +749,8 @@ std::vector<at::Tensor> backward_soft_rasterize_cuda(
     const dim3 blocks ((batch_size * image_size * image_size - 1) / threads + 1);
 
     AT_DISPATCH_FLOATING_TYPES(faces.scalar_type(), "backward_soft_rasterize_cuda", ([&] {
-      backward_soft_rasterize_cuda_kernel<scalar_t><<<blocks, threads>>>(
+      const cudaStream_t stream = at::cuda::getCurrentCUDAStream();
+      backward_soft_rasterize_cuda_kernel<scalar_t><<<blocks, threads, 0, stream>>>(
           faces.data_ptr<scalar_t>(),
           textures.data_ptr<scalar_t>(),
           soft_colors.data_ptr<scalar_t>(),
@@ -773,9 +777,7 @@ std::vector<at::Tensor> backward_soft_rasterize_cuda(
           double_side);
       }));
 
-    cudaError_t err = cudaGetLastError();
-    if (err != cudaSuccess) 
-        printf("Error in backward_soft_rasterize: %s\n", cudaGetErrorString(err));
+    C10_CUDA_KERNEL_LAUNCH_CHECK();
 
     return {grad_faces, grad_textures};
 }

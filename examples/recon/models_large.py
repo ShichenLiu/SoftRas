@@ -148,7 +148,7 @@ class Model(nn.Module):
     def evaluate_iou(self, images, voxels):
         vertices, faces = self.reconstruct(images)
 
-        faces_ = srf.face_vertices(vertices, faces).data
+        faces_ = srf.face_vertices(vertices, faces).detach()
         faces_norm = faces_ * 1. * (32. - 1) / 32. + 0.5
         voxels_predict = srf.voxelization(faces_norm, 32, False).cpu().numpy()
         voxels_predict = voxels_predict.transpose(0, 2, 1, 3)[:, :, :, ::-1]

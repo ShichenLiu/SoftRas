@@ -45,16 +45,22 @@ class Lighting(nn.Module):
 
     def forward(self, mesh):
         if mesh.texture_type == 'surface':
-            light = torch.zeros_like(mesh.faces, dtype=torch.float32).to(mesh.device)
-            light = light.contiguous()
+            light = torch.zeros(
+                mesh.faces.shape,
+                dtype=mesh.textures.dtype,
+                device=mesh.device,
+            ).contiguous()
             light = self.ambient(light)
             for directional in self.directionals:
                 light = directional(light, mesh.surface_normals)
             new_textures = mesh.textures * light[:, :, None, :]
 
         elif mesh.texture_type == 'vertex':
-            light = torch.zeros_like(mesh.vertices, dtype=torch.float32).to(mesh.device)
-            light = light.contiguous()
+            light = torch.zeros(
+                mesh.vertices.shape,
+                dtype=mesh.textures.dtype,
+                device=mesh.device,
+            ).contiguous()
             light = self.ambient(light)
             for directional in self.directionals:
                 light = directional(light, mesh.vertex_normals)

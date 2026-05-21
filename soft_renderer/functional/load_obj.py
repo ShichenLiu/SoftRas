@@ -1,10 +1,14 @@
 import os
 
-import torch
 import numpy as np
+import torch
 from skimage.io import imread
 
 import soft_renderer.cuda.load_textures as load_textures_cuda
+
+
+def _default_device():
+    return torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 def load_mtl(filename_mtl):
@@ -27,6 +31,8 @@ def load_mtl(filename_mtl):
 
 
 def load_textures(filename_obj, filename_mtl, texture_res):
+    device = _default_device()
+
     # load vertices
     vertices = []
     with open(filename_obj) as f:
@@ -67,17 +73,15 @@ def load_textures(filename_obj, filename_mtl, texture_res):
             material_name = line.split()[1]
     faces = np.vstack(faces).astype(np.int32) - 1
     faces = vertices[faces]
-    faces = torch.from_numpy(faces).cuda()
+    faces = torch.from_numpy(faces).to(device)
     faces[1 < faces] = faces[1 < faces] % 1
 
     colors, texture_filenames = load_mtl(filename_mtl)
 
-    textures = torch.ones(faces.shape[0], texture_res**2, 3, dtype=torch.float32)
-    textures = textures.cuda()
+    textures = torch.ones(faces.shape[0], texture_res ** 2, 3, dtype=torch.float32, device=device)
 
-    #
     for material_name, color in list(colors.items()):
-        color = torch.from_numpy(color).cuda()
+        color = torch.from_numpy(color).to(device)
         for i, material_name_f in enumerate(material_names):
             if material_name == material_name_f:
                 textures[i, :, :] = color[None, :]
@@ -88,17 +92,22 @@ def load_textures(filename_obj, filename_mtl, texture_res):
 
         # texture image may have one channel (grey color)
         if len(image.shape) == 2:
-            image = np.stack((image,)*3, -1)
+            image = np.stack((image,) * 3, -1)
         # or has extral alpha channel shoule ignore for now
         if image.shape[2] == 4:
             image = image[:, :, :3]
 
         # pytorch does not support negative slicing for the moment
         image = image[::-1, :, :]
-        image = torch.from_numpy(image.copy()).cuda()
+        image = torch.from_numpy(image.copy()).to(device)
         is_update = (np.array(material_names) == material_name).astype(np.int32)
-        is_update = torch.from_numpy(is_update).cuda()
-        textures = load_textures_cuda.load_textures(image, faces, textures, is_update)
+        is_update = torch.from_numpy(is_update).to(device)
+        textures = load_textures_cuda.load_textures(
+            image.contiguous(),
+            faces.contiguous(),
+            textures.contiguous(),
+            is_update.contiguous(),
+        )
     return textures
 
 
@@ -109,6 +118,7 @@ def load_obj(filename_obj, normalization=False, load_texture=False, texture_res=
     """
 
     assert texture_type in ['surface', 'vertex']
+    device = _default_device()
 
     # load vertices
     vertices = []
@@ -120,7 +130,7 @@ def load_obj(filename_obj, normalization=False, load_texture=False, texture_res=
             continue
         if line.split()[0] == 'v':
             vertices.append([float(v) for v in line.split()[1:4]])
-    vertices = torch.from_numpy(np.vstack(vertices).astype(np.float32)).cuda()
+    vertices = torch.from_numpy(np.vstack(vertices).astype(np.float32)).to(device)
 
     # load faces
     faces = []
@@ -135,7 +145,7 @@ def load_obj(filename_obj, normalization=False, load_texture=False, texture_res=
                 v1 = int(vs[i + 1].split('/')[0])
                 v2 = int(vs[i + 2].split('/')[0])
                 faces.append((v0, v1, v2))
-    faces = torch.from_numpy(np.vstack(faces).astype(np.int32)).cuda() - 1
+    faces = torch.from_numpy(np.vstack(faces).astype(np.int32)).to(device) - 1
 
     # load textures
     if load_texture and texture_type == 'surface':
@@ -153,7 +163,7 @@ def load_obj(filename_obj, normalization=False, load_texture=False, texture_res=
                 continue
             if line.split()[0] == 'v':
                 textures.append([float(v) for v in line.split()[4:7]])
-        textures = torch.from_numpy(np.vstack(textures).astype(np.float32)).cuda()
+        textures = torch.from_numpy(np.vstack(textures).astype(np.float32)).to(device)
 
     # normalize into a unit cube centered zero
     if normalization:

@@ -73,14 +73,16 @@ image_output = os.path.join(directory_output, 'pic')
 os.makedirs(image_output, exist_ok=True)
 
 # setup model & optimizer
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 model = models.Model('data/obj/sphere/sphere_642.obj', args=args)
-model = model.cuda()
+model = model.to(device)
 
 optimizer = torch.optim.Adam(model.model_param(), args.learning_rate)
 
 start_iter = START_ITERATION
 if args.resume_path:
-    state_dicts = torch.load(args.resume_path)
+    state_dicts = torch.load(args.resume_path, map_location=device)
     model.load_state_dict(state_dicts['model'])
     optimizer.load_state_dict(state_dicts['optimizer'])
     start_iter = int(os.path.split(args.resume_path)[1][11:].split('.')[0]) + 1
@@ -102,10 +104,10 @@ def train():
 
         # load images from multi-view
         images_a, images_b, viewpoints_a, viewpoints_b = dataset_train.get_random_batch(args.batch_size)
-        images_a = images_a.cuda()
-        images_b = images_b.cuda()
-        viewpoints_a = viewpoints_a.cuda()
-        viewpoints_b = viewpoints_b.cuda()
+        images_a = images_a.to(device)
+        images_b = images_b.to(device)
+        viewpoints_a = viewpoints_a.to(device)
+        viewpoints_b = viewpoints_b.to(device)
 
         # soft render images
         render_images, laplacian_loss, flatten_loss = model([images_a, images_b],
@@ -118,7 +120,7 @@ def train():
         loss = multiview_iou_loss(render_images, images_a, images_b) + \
             args.lambda_laplacian * laplacian_loss + \
             args.lambda_flatten * flatten_loss
-        losses.update(loss.data.item(), images_a.size(0))
+        losses.update(loss.item(), images_a.size(0))
 
         # compute gradient and optimize
         optimizer.zero_grad()
